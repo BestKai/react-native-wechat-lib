@@ -6,8 +6,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
+import android.util.Base64;
 
 import androidx.annotation.Nullable;
+import androidx.core.content.FileProvider;
 
 import com.facebook.common.executors.UiThreadImmediateExecutorService;
 import com.facebook.common.internal.Files;
@@ -24,11 +26,17 @@ import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.facebook.react.modules.core.RCTNativeAppEventEmitter;
+import com.tencent.mm.opensdk.diffdev.DiffDevOAuthFactory;
+import com.tencent.mm.opensdk.diffdev.IDiffDevOAuth;
+import com.tencent.mm.opensdk.diffdev.OAuthErrCode;
+import com.tencent.mm.opensdk.diffdev.OAuthListener;
 import com.tencent.mm.opensdk.modelbase.BaseReq;
 import com.tencent.mm.opensdk.modelbase.BaseResp;
 import com.tencent.mm.opensdk.modelbiz.ChooseCardFromWXCardPackage;
@@ -148,6 +156,42 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         }
     }
 
+  private void sendEvent(ReactContext reactContext, String eventName, WritableMap params) {
+    reactContext.getJSModule(RCTNativeAppEventEmitter.class).emit(eventName, params);
+  }
+
+  @ReactMethod
+  public void authByScan(String appid, String nonceStr, String timeStamp, String scope, String signature, String schemeData, final Callback callback) {
+    if (api == null) {
+      callback.invoke(NOT_REGISTERED);
+      return;
+    }
+
+    IDiffDevOAuth oauth = DiffDevOAuthFactory.getDiffDevOAuth();
+    oauth.stopAuth();
+    oauth.auth(appid, scope, nonceStr, timeStamp, signature, new OAuthListener() {
+      @Override
+      public void onAuthGotQrcode(String var1, byte[] var2){
+        WritableMap map = Arguments.createMap();
+        String base64String = Base64.encodeToString(var2, Base64.DEFAULT);
+        map.putString("qrcode", base64String);
+        sendEvent(getReactApplicationContext(), "onAuthGotQrcode", map);
+      }
+
+      @Override
+      public void onQrcodeScanned() {
+
+      }
+      @Override
+      public void onAuthFinish(OAuthErrCode var1, String var2){
+        WritableMap map = Arguments.createMap();
+        map.putString("authCode", var2);
+        map.putInt("errCode", var1.getCode());
+        callback.invoke(null, map);
+      }
+    });
+  }
+
     @ReactMethod
     public void registerApp(String appid, String universalLink, Callback callback) {
         this.appId = appid;
@@ -255,6 +299,21 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         return data;
     }
 
+    public String getFileUri(Context context, File file) {
+        if (file == null || !file.exists()) {
+            return null;
+        }
+
+        Uri contentUri = FileProvider.getUriForFile(context,
+            context.getPackageName() + ".fileprovider",  // 要与`AndroidManifest.xml`里配置的`authorities`一致
+            file);
+
+        // 授权给微信访问路径
+        context.grantUriPermission("com.tencent.mm",  // 这里填微信包名
+            contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        return contentUri.toString();   // contentUri.toString() 即是以"content://"开头的用于共享的路径
+    }
 
     /**
      * 分享文本
@@ -265,7 +324,15 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
     @ReactMethod
     public void shareFile(ReadableMap data, Callback callback) throws Exception {
         WXFileObject fileObj = new WXFileObject();
-        fileObj.fileData = loadRawDataFromURL(data.getString("url"));
+
+        String url = data.getString("url");
+        if (url.startsWith("http")) {
+            fileObj.fileData = loadRawDataFromURL(url);
+        } else {
+            File file = new File(url);
+            String fileUri = getFileUri(getReactApplicationContext(), file);
+            fileObj.filePath = fileUri;
+        }
 
         WXMediaMessage msg = new WXMediaMessage();
         msg.mediaObject = fileObj;
