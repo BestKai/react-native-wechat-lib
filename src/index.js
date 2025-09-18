@@ -10,13 +10,13 @@ import {
 } from 'react-native';
 
 let isAppRegistered = false;
-let { WeChat, WechatLib, RCNWeChat } = NativeModules;
+let { WeChat, WechatLib, RCTWeChat } = NativeModules;
 
 if (WeChat == null) {
   WeChat = WechatLib;
 }
 if (WeChat == null) {
-  WeChat = RCNWeChat;
+  WeChat = RCTWeChat;
 }
 
 // Event emitter to dispatch request and response from WeChat.
@@ -319,7 +319,7 @@ export function authByScan(appId, appSecret, onQRGet) {
       } else {
         reject(
           new WechatError({
-            errStr: '扫码登录失败' + JSON.stringify(e),
+            errStr: '扫码登录失败' + JSON.stringify(result),
             errCode: -2,
           })
         );
