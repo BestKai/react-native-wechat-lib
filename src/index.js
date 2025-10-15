@@ -122,6 +122,11 @@ export const registerApp = wrapRegisterApp(WeChat.registerApp);
 // );
 
 /**
+ * 处理微信启动参数
+ */
+export const handleOpenURL = wrapApi(WeChat.handleOpenURL);
+
+/**
  * Return if the wechat app is installed in the device.
  * @method isWXAppInstalled
  * @return {Promise}
@@ -671,7 +676,7 @@ export function pay(data) {
  */
 export class WechatError extends Error {
   constructor(resp) {
-    const message = resp.errStr || resp.errCode.toString();
+    const message = resp.errStr || (resp.errCode && resp.errCode.toString());
     super(message);
     this.name = 'WechatError';
     this.code = resp.errCode;

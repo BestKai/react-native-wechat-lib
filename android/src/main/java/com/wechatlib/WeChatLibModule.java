@@ -200,6 +200,17 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
     }
 
     @ReactMethod
+    public void handleOpenURL(String aUrl,Callback callback) {
+        if (api == null) {
+            callback.invoke(NOT_REGISTERED);
+            return;
+        }
+        Intent intent = new Intent();
+        intent.setData(Uri.parse(aUrl));
+        callback.invoke(null, api.handleIntent(intent,this));
+    }
+
+    @ReactMethod
     public void isWXAppInstalled(Callback callback) {
         if (api == null) {
             callback.invoke(NOT_REGISTERED);

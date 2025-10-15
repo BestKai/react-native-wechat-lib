@@ -127,6 +127,10 @@ RCT_EXPORT_METHOD(isWXAppInstalled:(RCTResponseSenderBlock)callback) {
     callback(@[[NSNull null], @([WXApi isWXAppInstalled])]);
 }
 
+RCT_EXPORT_METHOD(handleOpenURL:(NSString *)aUrl :(RCTResponseSenderBlock)callback) {
+  callback(@[[NSNull null], @([WXApi handleOpenURL:[NSURL URLWithString:aUrl] delegate:self])]);
+}
+
 RCT_EXPORT_METHOD(isWXAppSupportApi:(RCTResponseSenderBlock)callback) {
     callback(@[[NSNull null], @([WXApi isWXAppSupportApi])]);
 }
