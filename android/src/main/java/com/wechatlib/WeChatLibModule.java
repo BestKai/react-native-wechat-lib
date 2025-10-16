@@ -106,7 +106,8 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
             if (options > 10) {
                 options -= 8;
             } else {
-                return bitmapResizeGetBytes(Bitmap.createScaledBitmap(image, 280, image.getHeight() / image.getWidth() * 280, true), size);
+                return bitmapResizeGetBytes(
+                        Bitmap.createScaledBitmap(image, 280, image.getHeight() / image.getWidth() * 280, true), size);
             }
             // 这里压缩options%，把压缩后的数据存放到baos中
             image.compress(Bitmap.CompressFormat.JPEG, options, baos);
@@ -124,8 +125,10 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
     }
 
     /**
-     * fix Native module WeChatLibModule tried to override WeChatLibModule for module name RCTWeChat.
-     * If this was your intention, return true from WeChatLibModule#canOverrideExistingModule() bug
+     * fix Native module WeChatLibModule tried to override WeChatLibModule for
+     * module name RCTWeChat.
+     * If this was your intention, return true from
+     * WeChatLibModule#canOverrideExistingModule() bug
      *
      * @return
      */
@@ -156,41 +159,43 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         }
     }
 
-  private void sendEvent(ReactContext reactContext, String eventName, WritableMap params) {
-    reactContext.getJSModule(RCTNativeAppEventEmitter.class).emit(eventName, params);
-  }
-
-  @ReactMethod
-  public void authByScan(String appid, String nonceStr, String timeStamp, String scope, String signature, String schemeData, final Callback callback) {
-    if (api == null) {
-      callback.invoke(NOT_REGISTERED);
-      return;
+    private void sendEvent(ReactContext reactContext, String eventName, WritableMap params) {
+        reactContext.getJSModule(RCTNativeAppEventEmitter.class).emit(eventName, params);
     }
 
-    IDiffDevOAuth oauth = DiffDevOAuthFactory.getDiffDevOAuth();
-    oauth.stopAuth();
-    oauth.auth(appid, scope, nonceStr, timeStamp, signature, new OAuthListener() {
-      @Override
-      public void onAuthGotQrcode(String var1, byte[] var2){
-        WritableMap map = Arguments.createMap();
-        String base64String = Base64.encodeToString(var2, Base64.DEFAULT);
-        map.putString("qrcode", base64String);
-        sendEvent(getReactApplicationContext(), "onAuthGotQrcode", map);
-      }
+    @ReactMethod
+    public void authByScan(String appid, String nonceStr, String timeStamp, String scope, String signature,
+            String schemeData, final Callback callback) {
+        if (api == null) {
+            callback.invoke(NOT_REGISTERED);
+            return;
+        }
 
-      @Override
-      public void onQrcodeScanned() {
+        IDiffDevOAuth oauth = DiffDevOAuthFactory.getDiffDevOAuth();
+        oauth.stopAuth();
+        oauth.auth(appid, scope, nonceStr, timeStamp, signature, new OAuthListener() {
+            @Override
+            public void onAuthGotQrcode(String var1, byte[] var2) {
+                WritableMap map = Arguments.createMap();
+                String base64String = Base64.encodeToString(var2, Base64.DEFAULT);
+                map.putString("qrcode", base64String);
+                sendEvent(getReactApplicationContext(), "onAuthGotQrcode", map);
+            }
 
-      }
-      @Override
-      public void onAuthFinish(OAuthErrCode var1, String var2){
-        WritableMap map = Arguments.createMap();
-        map.putString("authCode", var2);
-        map.putInt("errCode", var1.getCode());
-        callback.invoke(null, map);
-      }
-    });
-  }
+            @Override
+            public void onQrcodeScanned() {
+
+            }
+
+            @Override
+            public void onAuthFinish(OAuthErrCode var1, String var2) {
+                WritableMap map = Arguments.createMap();
+                map.putString("authCode", var2);
+                map.putInt("errCode", var1.getCode());
+                callback.invoke(null, map);
+            }
+        });
+    }
 
     @ReactMethod
     public void registerApp(String appid, String universalLink, Callback callback) {
@@ -200,14 +205,14 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
     }
 
     @ReactMethod
-    public void handleOpenURL(String aUrl,Callback callback) {
+    public void handleOpenURL(String aUrl, Callback callback) {
         if (api == null) {
             callback.invoke(NOT_REGISTERED);
             return;
         }
         Intent intent = new Intent();
         intent.setData(Uri.parse(aUrl));
-        callback.invoke(null, api.handleIntent(intent,this));
+        callback.invoke(null, api.handleIntent(intent, this));
     }
 
     @ReactMethod
@@ -316,14 +321,14 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         }
 
         Uri contentUri = FileProvider.getUriForFile(context,
-            context.getPackageName() + ".fileprovider",  // 要与`AndroidManifest.xml`里配置的`authorities`一致
-            file);
+                context.getPackageName() + ".fileprovider", // 要与`AndroidManifest.xml`里配置的`authorities`一致
+                file);
 
         // 授权给微信访问路径
-        context.grantUriPermission("com.tencent.mm",  // 这里填微信包名
-            contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        context.grantUriPermission("com.tencent.mm", // 这里填微信包名
+                contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-        return contentUri.toString();   // contentUri.toString() 即是以"content://"开头的用于共享的路径
+        return contentUri.toString(); // contentUri.toString() 即是以"content://"开头的用于共享的路径
     }
 
     /**
@@ -364,11 +369,11 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
      */
     @ReactMethod
     public void shareText(ReadableMap data, Callback callback) {
-        //初始化一个 WXTextObject 对象，填写分享的文本内容
+        // 初始化一个 WXTextObject 对象，填写分享的文本内容
         WXTextObject textObj = new WXTextObject();
         textObj.text = data.getString("text");
 
-        //用 WXTextObject 对象初始化一个 WXMediaMessage 对象
+        // 用 WXTextObject 对象初始化一个 WXMediaMessage 对象
         WXMediaMessage msg = new WXMediaMessage();
         msg.mediaObject = textObj;
         msg.description = data.getString("text");
@@ -415,7 +420,8 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         });
 
     }
-    // private static final String SDCARD_ROOT = Environment.getExternalStorageDirectory().getAbsolutePath();
+    // private static final String SDCARD_ROOT =
+    // Environment.getExternalStorageDirectory().getAbsolutePath();
 
     /**
      * 分享本地图片
@@ -431,33 +437,35 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
             if (path.indexOf("file://") > -1) {
                 path = path.substring(7);
             }
-//            int maxWidth = data.hasKey("maxWidth") ? data.getInt("maxWidth") : -1;
+            // int maxWidth = data.hasKey("maxWidth") ? data.getInt("maxWidth") : -1;
             fs = new FileInputStream(path);
             Bitmap bmp = BitmapFactory.decodeStream(fs);
 
-//            if (maxWidth > 0) {
-//                bmp = Bitmap.createScaledBitmap(bmp, maxWidth, bmp.getHeight() / bmp.getWidth() * maxWidth, true);
-//            }
+            // if (maxWidth > 0) {
+            // bmp = Bitmap.createScaledBitmap(bmp, maxWidth, bmp.getHeight() /
+            // bmp.getWidth() * maxWidth, true);
+            // }
 
-//            File f = Environment.getExternalStoragePublicDirectory(SDCARD_ROOT + "/react-native-wechat-lib");
-//            String fileName = "wechat-share.jpg";
-//            String tempPath = SDCARD_ROOT + "/react-native-wechat-lib";
-//            File file = new File(f, fileName);
-//            try {
-//                FileOutputStream fos = new FileOutputStream(file);
-//                bmp.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-//                fos.flush();
-//                fos.close();
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
+            // File f = Environment.getExternalStoragePublicDirectory(SDCARD_ROOT +
+            // "/react-native-wechat-lib");
+            // String fileName = "wechat-share.jpg";
+            // String tempPath = SDCARD_ROOT + "/react-native-wechat-lib";
+            // File file = new File(f, fileName);
+            // try {
+            // FileOutputStream fos = new FileOutputStream(file);
+            // bmp.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+            // fos.flush();
+            // fos.close();
+            // } catch (FileNotFoundException e) {
+            // e.printStackTrace();
+            // } catch (IOException e) {
+            // e.printStackTrace();
+            // }
 
-//            int size = bmp.getByteCount();
-//            ByteArrayOutputStream var2 = new ByteArrayOutputStream();
-//            bmp.compress(Bitmap.CompressFormat.JPEG, 85, var2);
-//            int size2 = var2.toByteArray().length;
+            // int size = bmp.getByteCount();
+            // ByteArrayOutputStream var2 = new ByteArrayOutputStream();
+            // bmp.compress(Bitmap.CompressFormat.JPEG, 85, var2);
+            // int size2 = var2.toByteArray().length;
             // 初始化 WXImageObject 和 WXMediaMessage 对象
 
             WXImageObject imgObj = new WXImageObject(bmp);
@@ -539,7 +547,7 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         WXVideoObject video = new WXVideoObject();
         video.videoUrl = data.hasKey("videoUrl") ? data.getString("videoUrl") : null;
         video.videoLowBandUrl = data.hasKey("videoLowBandUrl") ? data.getString("videoLowBandUrl") : null;
-        //用 WXVideoObject 对象初始化一个 WXMediaMessage 对象
+        // 用 WXVideoObject 对象初始化一个 WXMediaMessage 对象
         final WXMediaMessage msg = new WXMediaMessage(video);
         msg.title = data.hasKey("title") ? data.getString("title") : null;
         msg.description = data.hasKey("description") ? data.getString("description") : null;
@@ -582,7 +590,7 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         WXWebpageObject webpage = new WXWebpageObject();
         webpage.webpageUrl = data.hasKey("webpageUrl") ? data.getString("webpageUrl") : null;
 
-        //用 WXWebpageObject 对象初始化一个 WXMediaMessage 对象
+        // 用 WXWebpageObject 对象初始化一个 WXMediaMessage 对象
         final WXMediaMessage msg = new WXMediaMessage(webpage);
         msg.title = data.hasKey("title") ? data.getString("title") : null;
         msg.description = data.hasKey("description") ? data.getString("description") : null;
@@ -625,7 +633,8 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         // 兼容低版本的网页链接
         miniProgramObj.webpageUrl = data.hasKey("webpageUrl") ? data.getString("webpageUrl") : null;
         // 正式版:0，测试版:1，体验版:2
-        miniProgramObj.miniprogramType = data.hasKey("miniProgramType") ? data.getInt("miniProgramType") : WXMiniProgramObject.MINIPTOGRAM_TYPE_RELEASE;
+        miniProgramObj.miniprogramType = data.hasKey("miniProgramType") ? data.getInt("miniProgramType")
+                : WXMiniProgramObject.MINIPTOGRAM_TYPE_RELEASE;
         // 小程序原始id
         miniProgramObj.userName = data.hasKey("userName") ? data.getString("userName") : null;
         // 小程序页面路径；对于小游戏，可以只传入 query 部分，来实现传参效果，如：传入 "?foo=bar"
@@ -636,7 +645,8 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         // 小程序消息 desc
         msg.description = data.hasKey("description") ? data.getString("description") : null;
 
-        String thumbImageUrl = data.hasKey("hdImageUrl") ? data.getString("hdImageUrl") : data.hasKey("thumbImageUrl") ? data.getString("thumbImageUrl") : null;
+        String thumbImageUrl = data.hasKey("hdImageUrl") ? data.getString("hdImageUrl")
+                : data.hasKey("thumbImageUrl") ? data.getString("thumbImageUrl") : null;
 
         if (thumbImageUrl != null && !thumbImageUrl.equals("")) {
             this._getImage(Uri.parse(thumbImageUrl), null, new ImageCallback() {
@@ -682,12 +692,13 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         WXLaunchMiniProgram.Req req = new WXLaunchMiniProgram.Req();
         // 填小程序原始id
         req.userName = data.getString("userName");
-        //拉起小程序页面的可带参路径，不填默认拉起小程序首页
+        // 拉起小程序页面的可带参路径，不填默认拉起小程序首页
         req.path = data.getString("path");
         // 可选打开 开发版，体验版和正式版
         req.miniprogramType = data.getInt("miniProgramType");
         boolean success = api.sendReq(req);
-        if (!success) callback.invoke(INVALID_ARGUMENT);
+        if (!success)
+            callback.invoke(INVALID_ARGUMENT);
     }
 
     /**
@@ -772,7 +783,8 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
 
             try {
                 uri = Uri.parse(imageUrl);
-                // Verify scheme is set, so that relative uri (used by static resources) are not handled.
+                // Verify scheme is set, so that relative uri (used by static resources) are not
+                // handled.
                 if (uri.getScheme() == null) {
                     uri = getResourceDrawableUri(getReactApplicationContext(), imageUrl);
                 }
@@ -898,7 +910,8 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         }
     }
 
-    private void _share(int scene, ReadableMap data, Bitmap thumbImage, WXMediaMessage.IMediaObject mediaObject, Callback callback) {
+    private void _share(int scene, ReadableMap data, Bitmap thumbImage, WXMediaMessage.IMediaObject mediaObject,
+            Callback callback) {
 
         WXMediaMessage message = new WXMediaMessage();
         message.mediaObject = mediaObject;
@@ -957,7 +970,8 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         Uri imageUri;
         try {
             imageUri = Uri.parse(imageUrl);
-            // Verify scheme is set, so that relative uri (used by static resources) are not handled.
+            // Verify scheme is set, so that relative uri (used by static resources) are not
+            // handled.
             if (imageUri.getScheme() == null) {
                 imageUri = getResourceDrawableUri(getReactApplicationContext(), imageUrl);
             }
@@ -1027,7 +1041,8 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         return new WXFileObject(data.getString("filePath"));
     }
 
-    // TODO: 实现sendRequest、sendSuccessResponse、sendErrorCommonResponse、sendErrorUserCancelResponse
+    // TODO:
+    // 实现sendRequest、sendSuccessResponse、sendErrorCommonResponse、sendErrorUserCancelResponse
 
     @Override
     public void onReq(BaseReq baseReq) {
@@ -1036,14 +1051,16 @@ public class WeChatLibModule extends ReactContextBaseJavaModule implements IWXAP
         map.putString("transaction", baseReq.transaction);
         if (baseReq.getType() == ConstantsAPI.COMMAND_SHOWMESSAGE_FROM_WX) {
             ShowMessageFromWX.Req req = (ShowMessageFromWX.Req) baseReq;
+
             // 对应JsApi navigateBackApplication中的extraData字段数据
-            map.putString("type", "SendMessageToWX.Resp");
+            map.putString("type", "LaunchFromWX.Req");
             map.putString("lang", req.lang);
-            map.putString("country", req.message.messageExt);
+            map.putString("country", req.country);
+            map.putString("extMsg", req.message.messageExt);
         }
         this.getReactApplicationContext()
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                .emit("WeChat_Resp", map);
+                .emit("WeChat_Req", map);
     }
 
     @Override
