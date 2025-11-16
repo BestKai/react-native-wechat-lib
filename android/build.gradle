@@ -28,6 +28,13 @@ def getExtOrIntegerDefault(name) {
 }
 
 android {
+
+  namespace "com.rn.wechatlib"
+
+  buildFeatures {
+    buildConfig true
+  }
+
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
   defaultConfig {
