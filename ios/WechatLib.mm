@@ -113,7 +113,8 @@ RCT_EXPORT_METHOD(registerApp
                   :(NSString *)universalLink
                   :(RCTResponseSenderBlock)callback) {
     self.appId = appid;
-    callback(@[[WXApi registerApp:appid universalLink:universalLink] ? [NSNull null] : INVOKE_FAILED]);
+    BOOL result = [WXApi registerApp:appid universalLink:universalLink];
+    callback(@[result]);
 }
 
 // RCT_EXPORT_METHOD(registerAppWithDescription:(NSString *)appid
